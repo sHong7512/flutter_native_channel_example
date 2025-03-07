@@ -55,6 +55,7 @@ class _NativeChannelPageState extends State<NativeChannelPage> {
               '${DateTime.now().hour}h ${DateTime.now().minute}m ${DateTime.now().second}s':
                   'Message!!'
             }),
+          if (Platform.isIOS) _button(NativeChannel.overlay, 'showNativeOverlay'),
         ],
       ),
     );

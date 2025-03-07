@@ -1,19 +1,26 @@
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 
-enum NativeChannel { random, klog, count }
+enum NativeChannel { random, klog, count, overlay }
 
 extension ChannelExtension on NativeChannel {
   static const String _randomPath = 'example.com/Random';
   static const String _klogPath = 'example.com/Klog';
   static const String _countPath = 'example.com/Count';
+  static const String _overlayPath = 'example.com/Overlay';
 
   bool get isMethodChannel {
     switch (this) {
       case NativeChannel.random:
         return true;
       case NativeChannel.klog:
-        return true;
+        if(Platform.isAndroid) return true;
+        return false;
       case NativeChannel.count:
+        return false;
+      case NativeChannel.overlay:
+        if(Platform.isIOS) return true;
         return false;
     }
   }
@@ -26,6 +33,8 @@ extension ChannelExtension on NativeChannel {
         return _klogPath;
       case NativeChannel.count:
         return _countPath;
+      case NativeChannel.overlay:
+        return _overlayPath;
     }
   }
 
@@ -35,6 +44,8 @@ extension ChannelExtension on NativeChannel {
         return const MethodChannel(_randomPath);
       case NativeChannel.klog:
         return const MethodChannel(_klogPath);
+      case NativeChannel.overlay:
+        return const MethodChannel(_overlayPath);
       default:
         throw Exception('UnDefined MethodChannel Name <$name>');
     }

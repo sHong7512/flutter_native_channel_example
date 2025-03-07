@@ -11,6 +11,8 @@ import Flutter
         makeRandomChannel()
         
         makeCountChannel()
+
+        makeOverlayChannel()
         
         GeneratedPluginRegistrant.register(with: self)
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -28,7 +30,26 @@ import Flutter
                 let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
                 let randString = String((0..<4).map { _ in letters.randomElement()! })
                 result(randString)
+            case "showNativeOverlay":
+                // IOS 네이티브 오버레이 예제
+                OverlayManager.shared.showOverlay()
+                result(nil)
             default:
+                result(FlutterMethodNotImplemented)
+            }
+        })
+    }
+
+    // IOS 네이티브 오버레이 예제
+    func makeOverlayChannel(){
+        let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
+        let methodChannel = FlutterMethodChannel(name: "example.com/Overlay",binaryMessenger: controller.binaryMessenger)
+        methodChannel.setMethodCallHandler({ [weak self](call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            switch call.method {
+               case "showNativeOverlay":
+                OverlayManager.shared.showOverlay()
+                result(nil)
+               default:
                 result(FlutterMethodNotImplemented)
             }
         })
@@ -66,3 +87,60 @@ class RandomNumberStreamHandler: NSObject, FlutterStreamHandler{
         return nil
     }
 }
+
+
+class OverlayViewController: UIViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.frame = UIScreen.main.bounds
+        view.backgroundColor = .blue
+
+        let titleLabel = UILabel()
+        titleLabel.text = "오버레이 화면"
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 24)
+        titleLabel.textColor = .black
+        titleLabel.textAlignment = .center
+        titleLabel.frame = CGRect(x: 0, y: 100, width: view.frame.width, height: 50)
+        view.addSubview(titleLabel)
+
+        let closeButton = UIButton(frame: CGRect(x: 50, y: 50, width: 100, height: 50))
+        closeButton.setTitle("닫기", for: .normal)
+        closeButton.setTitleColor(.white, for: .normal)
+        closeButton.backgroundColor = .red
+        closeButton.addTarget(self, action: #selector(closeOverlay), for: .touchUpInside)
+        view.addSubview(closeButton)
+    }
+
+    @objc private func closeOverlay() {
+        OverlayManager.shared.hideOverlay()
+    }
+}
+
+class OverlayManager {
+    static let shared = OverlayManager()
+
+    private var overlayWindow: UIWindow?
+
+    func showOverlay() {
+        guard overlayWindow == nil else { return }
+
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.windowLevel = .alert + 1  // 항상 앱 위에 표시
+        window.backgroundColor = .yellow  // 일반 화면처럼 설정
+
+        let overlayVC = OverlayViewController()
+        overlayVC.modalPresentationStyle = .fullScreen // 전체 화면 적용
+
+        window.rootViewController = overlayVC
+        window.makeKeyAndVisible()
+
+        overlayWindow = window
+    }
+
+    func hideOverlay() {
+        overlayWindow?.isHidden = true
+        overlayWindow = nil
+    }
+}
+
